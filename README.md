@@ -1,2 +1,3 @@
 # decisionpy
-Implementations of various decision-making models in Python
+
+Implementations of various decision-making models in Python.
