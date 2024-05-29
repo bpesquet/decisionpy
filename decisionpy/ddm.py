@@ -30,7 +30,7 @@ class DDM:
         rt_correct = []
         rt_error = []
 
-        # Maximum steps for the simulation
+        # Maximum steps for the trial
         max_steps = trial_max_duration / time_step
 
         for _ in range(n_trials):
@@ -48,19 +48,23 @@ class DDM:
                 and x_trial[i] < self.bounds[1]
             ):
                 # Update the DV by integrating evidence
-                x_trial.append(
-                    x_trial[i]
-                    + self.drift_rate * time_step
+                dx = (
+                    self.drift_rate * time_step
                     + self.noise * math.sqrt(time_step) * np.random.randn()
                 )
+                x_trial.append(x_trial[i] + dx)
 
                 # Increment loop counter for current trial
                 i += 1
 
             if x_trial[i] <= self.bounds[0]:
+                # Define final trial value as lower bound
+                x_trial[i] = self.bounds[0]
                 # Record the response time for error
                 rt_error.append(i)
             elif x_trial[i] >= self.bounds[1]:
+                # Define final trial value as upper bound
+                x_trial[i] = self.bounds[1]
                 # Record the response time for correct decision
                 rt_correct.append(i)
             else:
