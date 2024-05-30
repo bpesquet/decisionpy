@@ -5,25 +5,22 @@ Unit tests for DDM
 # pylint: disable=missing-docstring
 
 from decisionpy import DDM
-from decisionpy.plot import plot_response_times
+from decisionpy.plot import plot_response_times, plot_accumulators
 
 
 def simulate(model, n_trials=1000, show_plots=False):
     """Run a simulation for a given model"""
 
-    rt, accs = model.simulate(n_trials=n_trials)
+    simulation = model.simulate(n_trials=n_trials)
 
     # Check that a decision variable was recorded for all trials
-    assert len(accs) == n_trials
+    assert len(simulation.accs) == n_trials
 
     # Check that all trials ended with a decision
-    assert len(rt["Correct"]) + len(rt["Error"]) == n_trials
-    assert "None" not in rt
+    assert "None" not in simulation.rt
 
-    # plot_accumulators(
-    #     decision_variable=x_simulation, bounds=model.bounds, show=show_plots
-    # )
-    plot_response_times(rt=rt, show=show_plots)
+    plot_accumulators(simulation=simulation, show=show_plots)
+    plot_response_times(simulation=simulation, show=show_plots)
 
 
 def test_ddm_defaults(show_plots=False):

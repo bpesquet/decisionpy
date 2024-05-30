@@ -3,6 +3,8 @@ Generic model class implementing simulation algorithm
 """
 
 import abc
+from dataclasses import dataclass
+from typing import Dict, List
 
 
 class Model(abc.ABC):
@@ -34,7 +36,7 @@ class Model(abc.ABC):
             # Record values of all accumulators for the finished trial
             accs_simulation.append(self.accumulators)
 
-        return rt_simulation, accs_simulation
+        return Simulation(self, rt_simulation, accs_simulation)
 
     def simulate_trial(self, time_step, max_steps):
         """Run a trial belonging to a simulation"""
@@ -78,3 +80,12 @@ class Model(abc.ABC):
     @abc.abstractmethod
     def get_choice(self):
         """Get choice once a decision is taken"""
+
+
+@dataclass
+class Simulation:
+    """Result of a simulation"""
+
+    model: Model
+    rt: Dict
+    accs: List
