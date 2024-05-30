@@ -4,75 +4,68 @@ Diffusion Decision Model (a.k.a. Drift Diffusion Model)
 
 import math
 import numpy as np
+from .model import Model
 
 
-class DDM:
+class DDM(Model):
     """A Diffusion Decision Model"""
 
-    def __init__(self, drift_rate=0, noise=1, bounds=(-1, 1), starting_point=0):
+    def __init__(self, drift_rate=0, noise=1, bound=1, starting_position=0):
+        super().__init__()
+
         self.drift_rate = drift_rate
         self.noise = noise
-        self.bounds = bounds
-        self.starting_point = starting_point
+        self.bound = bound
+        self.starting_position = starting_position
 
-    def simulate(self, n_trials=1000, time_step=0.1, trial_max_duration=2000):
-        """Run a simulation with current model parameters"""
+        # DDM has only one accumulator
+        self.accumulator = []
 
-        print(f"Launching simulation for {self}")
-        print(
-            f"Number of trials: {n_trials}. Time step: {time_step} second(s). Maximum trial duration: {trial_max_duration} seconds."
+    @property
+    def accumulators(self):
+        return [self.accumulator]
+
+    @property
+    def choices(self):
+        return ("Correct", "Error")
+
+    def init_accumulators(self):
+        # Init accumulator with starting position
+        self.accumulator = [self.starting_position]
+
+    def update_accumulators(self, time_step):
+        # Get most recent value for the only accumulator used by DDM
+        x = self.accumulator[-1]
+
+        # Simulate evidence accumulation according to DDM
+        dx = (
+            self.drift_rate * time_step
+            + self.noise * math.sqrt(time_step) * np.random.randn()
         )
 
-        # Values of the decision variable (DV) for all trials
-        x_simulation = []
+        # Ensure that new value is between bounds
+        acc_value = max(min(x + dx, self.bound), -self.bound)
 
-        # Response times for correct (x >= upper bound) and error (x <= lower bound) decisions
-        rt_correct = []
-        rt_error = []
+        # Add new value to only accumulator
+        self.accumulator.append(acc_value)
 
-        # Maximum steps for the trial
-        max_steps = trial_max_duration / time_step
+    def is_decision_taken(self):
+        # Check if most recent accumulator value has reached bound
+        x = self.accumulator[-1]
+        return abs(x) == self.bound
 
-        for _ in range(n_trials):
-            # Values of DV for the current trial
-            x_trial = []
+    def get_choice(self):
+        # Get most recent value for the only accumulator used by DDM
+        x = self.accumulator[-1]
 
-            # Define starting point as first value of DV
-            x_trial.append(self.starting_point)
+        # By convention, upper bound is associated to correct choice
+        if x == self.bound:
+            return self.choices[0]
+        if x == -self.bound:
+            return self.choices[1]
 
-            # Integrate evidence until reaching a bound (-> decision taken) or exceeding trial duration
-            i = 0
-            while (
-                i < max_steps
-                and x_trial[i] > self.bounds[0]
-                and x_trial[i] < self.bounds[1]
-            ):
-                # Update the DV by integrating evidence
-                dx = (
-                    self.drift_rate * time_step
-                    + self.noise * math.sqrt(time_step) * np.random.randn()
-                )
-                x_trial.append(x_trial[i] + dx)
-
-                # Increment loop counter for current trial
-                i += 1
-
-            if x_trial[i] <= self.bounds[0]:
-                # Define final trial value as lower bound
-                x_trial[i] = self.bounds[0]
-                # Record the response time for error
-                rt_error.append(i)
-            elif x_trial[i] >= self.bounds[1]:
-                # Define final trial value as upper bound
-                x_trial[i] = self.bounds[1]
-                # Record the response time for correct decision
-                rt_correct.append(i)
-            else:
-                print("WARNING: trial ended without a decision.")
-
-            x_simulation.append(x_trial)
-
-        return x_simulation, rt_correct, rt_error
+        # Non decision taken
+        return "None"
 
     def __str__(self):
-        return f"DDM. Drift rate: {self.drift_rate}. Noise: {self.noise}. Bounds: {self.bounds}. Starting point: {self.starting_point}."
+        return f"DDM. Drift rate: {self.drift_rate}. Noise: {self.noise}. Bounds: ({-self.bound},{-self.bound}). Starting position: {self.starting_position}."
