@@ -23,6 +23,7 @@ class DDM(Model):
 
     @property
     def accumulators(self):
+        # Return a list containing the only accumulator
         return [self.accumulator]
 
     @property
@@ -58,13 +59,13 @@ class DDM(Model):
         # Get most recent value for the only accumulator used by DDM
         x = self.accumulator[-1]
 
-        # By convention, upper bound is associated to correct choice
+        # By convention, upper bound is associated to first choice (correct)
         if x == self.bound:
             return self.choices[0]
         if x == -self.bound:
             return self.choices[1]
 
-        # Non decision taken
+        # No decision taken
         return "None"
 
     def __str__(self):
